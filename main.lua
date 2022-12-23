@@ -5,6 +5,12 @@ require "obj.Bird"
 require "obj.Pipe"
 require "obj.PipePair"
 
+require "StateMachine"
+require "states.BaseState"
+require "states.TitleScreenState"
+require "states.PlayState"
+require "states.ScoreState"
+
 WINDOE_WIDTH = 1280
 WINDOW_HEIGHT = 720
 
@@ -23,21 +29,16 @@ local GROUND_SCROLL_SPEED = 60
 local BACKGROUND_LOOPING_POINT = 413
 local GROUND_LOOPING_POINT = 514
 
-local bird = Bird()
-
-local pipePairs = {}
--- the first pipePair's coordinate on y-aixs (up-left corner of the obj)
-local lastY = - PIPE_HEIGHT + math.random(80) + 20 
-
-local spawnTimer = 0
-
-local scrolling = true
-
 function love.load()
 
     love.graphics.setDefaultFilter('nearest', 'nearest')
 
     love.window.setTitle('Fifty Bird')
+
+    smallFont = love.graphics.newFont('font/font.ttf', 8)
+    mediumFont = love.graphics.newFont('font/flappy.ttf', 14)
+    flappyFont = love.graphics.newFont('font/flappy.ttf', 28)
+    hugeFont = love.graphics.newFont('font/flappy.ttf', 56)
 
     math.randomseed(os.time())
 
@@ -47,6 +48,15 @@ function love.load()
         resizable = true
     })
 
+    -- build state machine
+    gStateMachine = StateMachine {
+        ['title'] = function() return TitleScreenState() end,
+        ['play'] = function() return PlayState() end,
+        ['score'] = function() return ScoreState() end
+    }
+    gStateMachine:change('title')
+
+    -- record the input keys once pressed 
     love.keyboard.keysPressed = {}
 
 end
@@ -54,6 +64,8 @@ end
 function love.resize(w, h)
     push:resize(w, h)
 end
+
+-- Keypress Control --
 
 function love.keypressed(key)
     -- kepp record the keys pressed this frame
@@ -68,66 +80,24 @@ function love.keyboard.wasPressed(key)
     return love.keyboard.keysPressed[key]
 end
 
+
 function love.update(dt)
 
-    if scrolling then
+    -- the background and ground keep scrolling at any states
 
-        -- scroll the background by preset speed * dt, looping back to 0 after the looping point
-        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) 
-            % BACKGROUND_LOOPING_POINT
-        
-        -- scroll the ground by preset speed * dt, looping back to 0 after the screen width passes
-        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) 
-            % GROUND_LOOPING_POINT
+    -- scroll the background by preset speed * dt, looping back to 0 after the looping point
+    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) 
+        % BACKGROUND_LOOPING_POINT
+    
+    -- scroll the ground by preset speed * dt, looping back to 0 after the screen width passes
+    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) 
+        % GROUND_LOOPING_POINT
 
-        spawnTimer = spawnTimer + dt
+    -- update according to current state
+    gStateMachine:update(dt)
 
-        if spawnTimer > 2 then
-            -- modify the last Y coordinate we placed so pipe gaps aren't too far apart
-            -- no higher than 10 pixels below the top edge of the screen,
-            -- and no lower than a gap length (90 pixels) from the bottom
-            local y = math.max(-PIPE_HEIGHT + 10, 
-                math.min(VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT, lastY + math.random(-20, 20)))
-            lastY = y
-
-            table.insert(pipePairs, PipePair(y))
-            spawnTimer = 0
-        end
-
-        -- update the bird and pipes
-
-        bird:update(dt)
-
-        for key, pair in pairs(pipePairs) do
-            pair:update(dt)
-            
-            for l, pipe in pairs(pair.pipes) do
-                if bird:collides(pipe) then
-                    scrolling = false
-                end
-            end
-
-            -- remove any flagged (out of left boundary of the screen) PipePairs 
-            if pair.remove then
-                table.remove(pipePairs, key)
-            end
-        end
-
-    end
-
+    -- empty the input keys table
     love.keyboard.keysPressed = {}
-end
-
-function tablelength(T)
-    local count = 0
-    for _ in pairs(T) do count = count + 1 end
-    return count
-  end
-
-function displayInfo()
-    love.graphics.setFont(love.graphics.newFont('font/font.ttf', 8))
-    love.graphics.setColor(0, 255, 0, 255)
-    love.graphics.print('Pipe Counts: ' .. tostring(tablelength(pipePairs)), 10, 10)
 end
 
 function love.draw()
@@ -136,17 +106,10 @@ function love.draw()
     -- draw the background starting at top left (0, 0)
     love.graphics.draw(background, -backgroundScroll, 0)
 
-    -- be careful about the order of drawing procedure, we want it likes the pipe sticks out from the ground
-    for k, pair in pairs(pipePairs) do
-        pair:render()
-    end
+    gStateMachine:render()  -- notice on drawing order
 
     -- draw the ground on top of the background, toward the bottom of the screen 
     love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16)  -- the height of our "gournd image" : 16
-
-    bird:render()
-
-    displayInfo()
 
     push:finish()
 end

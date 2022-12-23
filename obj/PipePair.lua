@@ -15,6 +15,9 @@ function PipePair:init(y)
     -- whether this PipePair is ready to be removed from the screen 
     self.remove = false
 
+    -- whether or not this pair of pipes has been passed / scored
+    self.scored = false
+
 end
 
 function PipePair:update(dt)
