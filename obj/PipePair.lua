@@ -1,6 +1,6 @@
 PipePair = class{}
 
-local GAP_HEIGHT = 90
+local GAP_HEIGHT = 110
 
 function PipePair:init(y)
     
