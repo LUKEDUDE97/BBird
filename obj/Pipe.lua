@@ -4,7 +4,7 @@ local PIPE_IMAGE = love.graphics.newImage('/assets/pipe.png')
 
 PIPE_SCROLL_SPEED  = - 60
 
-PIPE_HEIGHT = 288
+PIPE_HEIGHT = 433
 PIPE_WIDTH = 70
 
 function Pipe:init(orientation, y)

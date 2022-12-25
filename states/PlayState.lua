@@ -72,19 +72,18 @@ function PlayState:update(dt)
 
 end
 
--- TODO :
+-- TODO : Pipe pair length
 
--- function tablelength(T)
---     local count = 0
---     for _ in pairs(T) do count = count + 1 end
---     return count
---   end
+function tablelength(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
+  end
 
--- function PlayState:pipeLength()
---     love.graphics.setFont(love.graphics.newFont('font/font.ttf', 8))
---     love.graphics.setColor(0, 255, 0, 255)
---     love.graphics.print('Pipe Counts: ' .. tostring(tablelength(self.pipePairs)), 10, 10)
--- end
+function PlayState:pipeLength()
+    love.graphics.setFont(smallFont)
+    love.graphics.print('Pipe Counts: ' .. tostring(tablelength(self.pipePairs)), 440, 10)
+end
 
 function PlayState:render()
     for key, pair in pairs(self.pipePairs) do
@@ -92,9 +91,9 @@ function PlayState:render()
     end
 
     love.graphics.setFont(flappyFont)
-    love.graphics.print('Score: ' .. tostring(self.score), 0, 0)
+    love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
-    -- self:pipeLength()
+    self:pipeLength()
 
     self.bird:render()
 end

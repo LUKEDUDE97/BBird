@@ -10,6 +10,7 @@ require "states.BaseState"
 require "states.TitleScreenState"
 require "states.PlayState"
 require "states.ScoreState"
+require "states.CountDownState"
 
 WINDOE_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -52,7 +53,8 @@ function love.load()
     gStateMachine = StateMachine {
         ['title'] = function() return TitleScreenState() end,
         ['play'] = function() return PlayState() end,
-        ['score'] = function() return ScoreState() end
+        ['score'] = function() return ScoreState() end,
+        ['count'] = function() return CountDownState() end
     }
     gStateMachine:change('title')
 
